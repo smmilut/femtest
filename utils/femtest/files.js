@@ -1,17 +1,12 @@
 /**
- * @param {string} s 
- * @returns {Array} split, trim, remove empty strings
- */
- function cleanSplit(s) {
-    return s.split("\n").map(s => s.trim()).filter(s => s !== "");
-}
-
-/**
  * @param {string} selector DOM selector
- * @returns text blob of file list
+ * @param {object} doc object like `document`
+ * @returns {Array} filenames
  */
-function getFileListInput(selector) {
-    return document.querySelector(selector).textContent;
+function getFilenames(selector, doc = document) {
+    return Array.from(doc.querySelector(selector).children).map(function filenameFromLi(elLi) {
+        return elLi.textContent;
+    });
 }
 
 /**
@@ -23,6 +18,7 @@ async function loadModulesFromFilenames(filenames) {
         return import(file);
     });
     await Promise.all(modulePromises);
+    return modulePromises;
 }
 
 /**
@@ -30,7 +26,5 @@ async function loadModulesFromFilenames(filenames) {
  * @param {string} selector DOM selector
  */
 export async function gatherFiles(selector) {
-    const filelist = getFileListInput(selector);    
-    const filenames = cleanSplit(filelist);
-    await loadModulesFromFilenames(filenames);
+    return await loadModulesFromFilenames(getFilenames(selector));
 }

@@ -6,7 +6,7 @@ import { gatherFiles } from "./files.js";
  * @param {Function} log 
  */
 async function gatherAndRun(log) {
-    await gatherFiles("main");
+    await gatherFiles("#filelist");
     Test.runAll(log);
 }
 

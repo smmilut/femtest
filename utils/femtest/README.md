@@ -10,6 +10,8 @@ rewriting as html page
 
 ## How to write
 
+Import "test.js" and use `Test.it()` to add a test :
+
 js```
 import { Test, assert } from "../utils/femtest/test.js";
 
@@ -21,13 +23,14 @@ Test.it("do something / description here", function testSomething() {
 });
 ```
 
-Reference your test files' paths (relative or absolute) in `index.html` 's `<main>` tag, separated by new lines :
+Reference your test files' paths in `index.html` as a new `<li> tag inside tag `<ul id="filelist">`. You can use absolute paths or relative to the `index.html`.
 
 html```
-<main>
-    ../../tests/femtestImport.js
-    /tests/femtestEquals.js
-</main>
+<ul id="filelist">
+    <li>/tests/femtestEquals.js</li>
+    <li>/tests/femtestThrows.js</li>
+    <li>../../tests/femtestImport.js</li>
+</ul>
 ```
 
 ## How to run

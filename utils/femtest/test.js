@@ -38,7 +38,7 @@ export const Test = (function build_Test() {
  * @param {string} groupName 
  * @returns function `it` preloaded with the groupName
  */
-export function group(groupName) {
+export function groupIt(groupName) {
     return function it(description, test) {
         return Test.it(description, test, groupName);
     };
