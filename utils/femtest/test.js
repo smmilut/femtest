@@ -14,22 +14,36 @@ export const Test = (function build_Test() {
                 groupName,
             });
         },
-        runAll: function Test_runAll(log = console.log) {
-            const totalLength = tests.length;
-            let countOk = 0, countFail = 0;
-            tests.forEach(function runTest(t, i) {
-                log(`[${i + 1}/${totalLength}] "${t.groupName}" says it should : ${t.description} ...`);
+        runAll: function Test_runAll() {
+            return tests.reduce(function runTest(results, t, i) {
+                if (!results.groups.has(t.groupName)) {
+                    results.groups.set(t.groupName, []);
+                }
+                const result = {
+                    description: t.description,
+                    index: i,
+                };
                 try {
                     t.test();
-                    countOk++;
-                    log(`\t--> OK, it does ${t.description}`);
+                    result.isPass = true;
+                    results.summary.countOk++;
                 } catch (error) {
-                    log(`\t--> FAIL, it does not ${t.description}`);
-                    countFail++;
-                    log(error);
+                    result.error = error;
+                    result.isPass = false;
+                    results.summary.countFail++;
                 }
+                results.summary.totalRun++;
+                results.groups.get(t.groupName).push(result);
+                return results;
+            }, {
+                groups: new Map(),
+                summary: {
+                    totalLength: tests.length,
+                    totalRun: 0,
+                    countOk: 0,
+                    countFail: 0,
+                },
             });
-            log(`=> RESULT : ${totalLength} total = ${countFail} FAIL + ${countOk} OK`);
         },
     };
 })();
