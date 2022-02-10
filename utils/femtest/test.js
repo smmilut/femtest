@@ -1,5 +1,5 @@
 export const Test = (function build_Test() {
-    let tests = [];
+    const tests = [];
     return {
         /**
          * Write test with this.
@@ -14,6 +14,16 @@ export const Test = (function build_Test() {
                 groupName,
             });
         },
+        /**
+         * run all tests and return results
+         * @returns {object} {
+                groups: Map([
+                    [groupName1, { description, index, isPass, error }],
+                    [groupName2, result2],
+                    ...]),
+                summary: { totalLength, totalRun, countOk, countFail },
+            }
+         */
         runAll: function Test_runAll() {
             return tests.reduce(function runTest(results, t, i) {
                 if (!results.groups.has(t.groupName)) {
@@ -24,7 +34,7 @@ export const Test = (function build_Test() {
                     index: i,
                 };
                 try {
-                    t.test();
+                    result.returned = t.test();
                     result.isPass = true;
                     results.summary.countOk++;
                 } catch (error) {
