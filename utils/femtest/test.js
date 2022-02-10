@@ -18,7 +18,7 @@ export const Test = (function build_Test() {
          * run all tests and return results
          * @returns {object} {
                 groups: Map([
-                    [groupName1, { description, index, isPass, error }],
+                    [groupName1, { description, index, isPass, error, returned }],
                     [groupName2, result2],
                     ...]),
                 summary: { totalLength, totalRun, countOk, countFail },
@@ -77,7 +77,7 @@ export const assert = {
         if (value1 === value2) {
             return true;
         } else {
-            throw `${value1} !== ${value2}`
+            throw new AssertError(`${value1} !== ${value2}`);
         }
     },
     throws: function assert_throws(fn, msgRegex) {
@@ -88,8 +88,21 @@ export const assert = {
                 /// successfully matches the regex
                 return true;
             }
-            throw `Exception message "${error}" doesn't match "${msgRegex}".`;
+            throw new AssertError(`Exception message "${error}" doesn't match "${msgRegex}".`);
         }
-        throw `No exception thrown.`;
+        throw new AssertError(`No exception thrown.`);
     },
 };
+
+export class AssertError extends Error {
+    constructor(...params) {
+      super(...params)
+  
+      // Maintains proper stack trace for where our error was thrown (only available on V8)
+      if (Error.captureStackTrace) {
+        Error.captureStackTrace(this, AssertError);
+      }
+  
+      this.name = "AssertError";
+    }
+  }
