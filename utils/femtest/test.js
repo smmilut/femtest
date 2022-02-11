@@ -84,8 +84,11 @@ export const assert = {
         try {
             fn();
         } catch (error) {
-            if (msgRegex.exec(error)) {
-                /// successfully matches the regex
+            if (error.message !== undefined && msgRegex.exec(error.message)) {
+                /// Error object with a .message matching the regex
+                return true;
+            } else if (msgRegex.exec(error)) {
+                /// string matching the regex
                 return true;
             }
             throw new AssertError(`Exception message "${error}" doesn't match "${msgRegex}".`);

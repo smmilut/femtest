@@ -1,8 +1,16 @@
-import { Test, assert } from "../utils/femtest/test.js";
+import { groupIt, assert } from "../utils/femtest/test.js";
+const it = groupIt("femtestThrows")
 
-Test.it("throw blabla now", function throwBlabla() {
+it("throw blabla string now", function throwBlabla() {
     function throwsBlabla() {
         throw "blabla";
+    }
+    assert.throws(throwsBlabla, /^blabla$/);
+});
+
+it("throw blabla Error now", function throwBlabla() {
+    function throwsBlabla() {
+        throw new Error("blabla");
     }
     assert.throws(throwsBlabla, /^blabla$/);
 });

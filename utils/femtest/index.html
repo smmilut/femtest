@@ -7,19 +7,27 @@
     <title>femtest</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link href="main.css" rel="stylesheet">
 </head>
 
 <body>
-    <section>
-        <header><h2>Files tested :</h2></header>
+    <section class="wrapper">
+        <header>
+            <h2>Files tested :</h2>
+        </header>
+        <div class="box">
         <ul id="filelist">
             <li>/tests/femtestEquals.js</li>
             <li>/tests/femtestThrows.js</li>
             <li>../../tests/femtestImport.js</li>
         </ul>
+    </div>
+        <p>Instructions : add files to the above list using the relative or absolute path.</p>
     </section>
-    <main id="results">
-        <header><h2>Results :</h2></header>
+    <main id="results" class="wrapper">
+        <header>
+            <h2>Results :</h2>
+        </header>
     </main>
     <script src="index.js" type="module"></script>
 </body>

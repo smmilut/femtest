@@ -6,7 +6,7 @@ femto-test ultra simple testing framework
 
 ## Status
 
-rewriting as html page
+basic usable
 
 ## How to write
 
@@ -35,4 +35,4 @@ html```
 
 ## How to run
 
-Run the web server in the root directory and browse to (http://0.0.0.0:8000/utils/femtest/index.html)
+Run the web server in the root directory and browse to [the index.html](http://0.0.0.0:8000/utils/femtest/index.html)
