@@ -7,7 +7,7 @@ export const Test = (function build_Test() {
          * @param {String} description test description in the present tense : "It should `description`"
          * @param {Function} test test function to run, throws on failure
          */
-        it: function Test_it(description, test, groupName = "ungrouped") {
+        itShould: function Test_itShould(description, test, groupName = "ungrouped") {
             tests.push({
                 description,
                 test,
@@ -24,8 +24,9 @@ export const Test = (function build_Test() {
                 summary: { totalLength, totalRun, countOk, countFail },
             }
          */
-        runAll: function Test_runAll() {
-            return tests.reduce(function runTest(results, t, i) {
+        runAll: async function Test_runAll() {
+            return tests.reduce(async function runTest(results, t, i) {
+                results = await results;
                 if (!results.groups.has(t.groupName)) {
                     results.groups.set(t.groupName, []);
                 }
@@ -34,7 +35,17 @@ export const Test = (function build_Test() {
                     index: i,
                 };
                 try {
-                    result.returned = t.test();
+                    if (isAsync(t.test)) {
+                        console.log("Waiting for async test...")
+                        let innerError;
+                        result.returned = await t.test().catch(e => { innerError = e; });
+                        if (innerError !== undefined) {
+                            throw innerError;
+                        }
+                        console.log("... completed async test");
+                    } else {
+                        result.returned = t.test();
+                    }
                     result.isPass = true;
                     results.summary.countOk++;
                 } catch (error) {
@@ -60,12 +71,20 @@ export const Test = (function build_Test() {
 
 /**
  * @param {string} groupName 
- * @returns function `it` preloaded with the groupName
+ * @returns function `itShould` preloaded with the groupName
  */
 export function groupIt(groupName) {
-    return function it(description, test) {
-        return Test.it(description, test, groupName);
+    return function itShould(description, test) {
+        return Test.itShould(description, test, groupName);
     };
+}
+
+/**
+ * @param {Function} f 
+ * @returns {bool} is `f` async
+ */
+function isAsync(f) {
+    return f.constructor.name === "AsyncFunction";
 }
 
 /**
@@ -95,7 +114,11 @@ export const assert = {
         }
         throw new AssertError(`No exception thrown.`);
     },
-    arraysEqual: function assert_arraysEqual(array1, array2, equality = function strictEquality(a, b) { return a === b; }) {
+    arraysEqual: function assert_arraysEqual(array1, array2,
+        {
+            equality = function strictEquality(a, b) { return a === b; },
+        } = {}
+    ) {
         if (!Array.isArray(array1)) {
             throw new AssertError(`"${array1}" !== "${array2}" because the first is not an Array.`);
         }
