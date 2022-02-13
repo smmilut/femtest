@@ -22,6 +22,10 @@ code {
   margin: 0.5em;
 }
 
+.progressIcon {
+  color: blue;
+}
+
 .passIcon {
   color: green;
 }
@@ -33,6 +37,10 @@ code {
 .passfail {
   padding: 0.5em;
   font-weight: bold;
+}
+
+.progress {
+  color: rgb(90, 90, 233);
 }
 
 .pass {

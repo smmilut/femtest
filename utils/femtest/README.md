@@ -6,7 +6,7 @@ femto-test ultra simple testing framework
 
 ## Status
 
-basic usable
+Usable. Handles asynchronous tests, and runs everything in parallel.
 
 ## How to write
 
@@ -20,8 +20,11 @@ Test.itShould("do something / description here", function testSomething() {
     const val1 = 2, val2 = 3, expected = 5, result = val1 + val2;
     /// assert at the end
     assert.strictEqual(expected, result);
-});
+},
+"optionnal group name");
 ```
+
+The group name is optionnal. Group names that only differ by special characters are considered the same (e.g. `my super tests !` and `my--super / tests ++` will be aggregated together).
 
 ### How to choose which tests are run
 

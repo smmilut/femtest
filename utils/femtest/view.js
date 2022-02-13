@@ -7,72 +7,70 @@
 export function view(results, selector, doc = document) {
     const elParent = doc.querySelector(selector);
     /// Append global test summary
-    const elSummary = globalSummaryToHTml(results.summary, doc);
+    const elSummary = updateGlobalSummary(results.summary, doc);
     elParent.appendChild(elSummary);
-    /// Append all result groups
-    const elGroups = resultGroupsToHtml(results.groups, doc)
-    elGroups.forEach(function appendGroupToParent(elGroup) {
-        elParent.appendChild(elGroup);
+    /// Promise to view each result
+    results.promises.forEach(function promiseView(resultPromise) {
+        resultPromise.then(
+            function viewResult(result) {
+                createResultGroup(result.groupName, elParent, doc);
+                addResultToGroup(result, doc);
+                updateGlobalSummary(results.summary, doc);
+            }
+        );
     });
 }
 
 /**
- * Generate HTML for all the groups
- * @param {Map} groups Map([
-                    [groupName1, [{ description, index, isPass, error, returned }, result1b, result1c, ...]],
-                    [groupName2, [result2a, ...]],
-                    ...])
- * @param {object} doc the `document`
- * @returns {Array} [ groupHtml ]
- */
-function resultGroupsToHtml(groups, doc = document) {
-    return Array.from(groups.entries()).map(
-        function resultGroupEntryToHtml([groupName, resultArray]) {
-            return resultGroupToHtml(groupName, resultArray, doc);
-        }
-    );
-}
-
-/**
- * Generate HTML for the whole test group, and return it
+ * Create or update the result group
  * @param {string} groupName 
- * @param {Array} resultArray [ results ]
+ * @param {Node} elParent parent Element where the group's Element will be appended if it is newly created
  * @param {object} doc the `document`
- * @returns {Node} HTML element for the results of the test group
+ * @returns {Node} HTML element for the result group
  */
-function resultGroupToHtml(groupName, resultArray, doc = document) {
-    /// Create section and header
-    const elGroup = resultGroupToSectionHtml(groupName, doc);
-    /// Append results
-    resultArray.map(
-        function appendResultToGroup(result) {
-            const elResult = resultToHtml(result, doc);
-            elGroup.appendChild(elResult);
-        }
-    );
+function createResultGroup(groupName, elParent, doc = document) {
+    const idGroup = groupNameToId(groupName);
+    let elGroup = doc.getElementById(idGroup);
+    if (!elGroup) {
+        /// Create Section
+        const elGroup = doc.createElement("section");
+        elGroup.setAttribute("id", idGroup);
+        elGroup.classList.add("box");
+        /// Append header
+        const elGroupHeader = doc.createElement("h3");
+        elGroupHeader.textContent = `Tests for ${groupName} :`;
+        elGroup.appendChild(elGroupHeader);
+        elParent.appendChild(elGroup);
+    }
     return elGroup;
 }
 
 /**
- * Generate the HTML section and header for beginning the test group, and return it
+ * Sanitize and standardize the HTML id for test groups
  * @param {string} groupName 
- * @param {object} doc the `document`
- * @returns {Node} HTML element for the section of results of the test group
+ * @returns {string} ID usable for HTML
  */
-function resultGroupToSectionHtml(groupName, doc = document) {
-    /// Create Section
-    const elGroup = doc.createElement("section");
-    elGroup.classList.add("box");
-    /// Append header
-    const elGroupHeader = doc.createElement("h3");
-    elGroupHeader.textContent = `Tests for ${groupName} :`;
-    elGroup.appendChild(elGroupHeader);
-    return elGroup;
+function groupNameToId(groupName) {
+    return `femtestGroup-${groupName.replace(/[^a-zA-Z0-9]+/g, "_")}`;
+}
+
+/**
+ * Generate the result HTML and append it to the group's Node
+ * @param {object} result { description, index, groupName, isCompleted, isPass, error, returned }
+ * @param {object} doc the `document`
+ * @returns {Node} HTML element for the test result
+ */
+function addResultToGroup(result, doc = document) {
+    const idGroup = groupNameToId(result.groupName);
+    const elGroup = doc.getElementById(idGroup);
+    const elResult = resultToHtml(result, doc = document)
+    elGroup.appendChild(elResult);
+    return elResult;
 }
 
 /**
  * Generate the HTML for this test result, and return it
- * @param {object} result { description, index, isPass, error, returned }
+ * @param {object} result { description, index, groupName, isCompleted, isPass, error, returned }
  * @param {object} doc the `document`
  * @returns {Node} HTML element for the test result
  */
@@ -80,7 +78,7 @@ function resultToHtml(result, doc = document) {
     /// Create result
     const elResult = doc.createElement("article");
     /// Append result content
-    const elResultPassFailIcon = doc.createElement("span");    
+    const elResultPassFailIcon = doc.createElement("span");
     elResultPassFailIcon.classList.add("passfailIcon");
     const elResultPassFail = doc.createElement("span");
     elResultPassFail.classList.add("passfail");
@@ -123,25 +121,37 @@ function resultToHtml(result, doc = document) {
 }
 
 /**
+ * Create or update the global summary
  * @param {object} summary { totalLength, totalRun, countOk, countFail }
  * @param {object} doc the `document`
  * @returns {Node} HTML element for the summary of test results
  */
-function globalSummaryToHTml(summary, doc = document) {
-    /// Create summary section
-    const elSummary = doc.createElement("summary");
-    elSummary.classList.add("box");
+function updateGlobalSummary(summary, doc = document) {
+    const idSummary = "femtestGlobalSummary";
+    let elSummary = doc.getElementById(idSummary);
+    if (!elSummary) {
+        /// Create summary section
+        elSummary = doc.createElement("summary");
+        elSummary.setAttribute("id", idSummary);
+        elSummary.classList.add("box");
+    }
+    elSummary.innerHTML = "";
     /// Append title
     const elSummaryTitle = doc.createElement("h3");
     elSummaryTitle.textContent = "Summary :";
     elSummary.appendChild(elSummaryTitle);
     /// Append summary result
     const elPassOrFail = doc.createElement("p");
-    const elPassFailIcon = doc.createElement("span");    
+    const elPassFailIcon = doc.createElement("span");
     elPassFailIcon.classList.add("passfailIcon");
-    const elPassFailText = doc.createElement("span");    
+    const elPassFailText = doc.createElement("span");
     elPassFailText.classList.add("passfail");
-    if (summary.countFail === 0) {
+    if (summary.totalRun < summary.totalLength) {
+        elPassFailIcon.textContent = "\u231B";
+        elPassFailIcon.classList.add("progressIcon");
+        elPassFailText.textContent = `IN PROGRESS ${100 * summary.totalRun / summary.totalLength}%`;
+        elPassFailText.classList.add("progress");
+    } else if (summary.countFail === 0) {
         elPassFailIcon.textContent = "\u2714";
         elPassFailIcon.classList.add("passIcon");
         elPassFailText.textContent = "SUCCESS";
@@ -158,6 +168,6 @@ function globalSummaryToHTml(summary, doc = document) {
     /// Append summary details line
     const elSummaryDetails = doc.createElement("p");
     elSummaryDetails.textContent = `${summary.totalRun}/${summary.totalLength} ran = ${summary.countFail} FAIL + ${summary.countOk} OK`;
-    elSummary.appendChild(elSummaryDetails);    
+    elSummary.appendChild(elSummaryDetails);
     return elSummary;
 }

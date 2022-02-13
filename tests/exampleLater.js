@@ -1,5 +1,5 @@
 import { groupIt, assert } from "../utils/femtest/test.js";
-const itShould = groupIt("async / later");
+const itShould = groupIt("example : async / later");
 
 itShould("eventually handle the correct value", function later() {
     let value = "initial";

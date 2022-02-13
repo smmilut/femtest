@@ -1,5 +1,5 @@
 import { groupIt, assert } from "../utils/femtest/test.js";
-const itShould = groupIt("femtestThrows")
+const itShould = groupIt("example : throwing errors")
 
 itShould("throw blabla string now", function throwBlabla() {
     function throwsBlabla() {

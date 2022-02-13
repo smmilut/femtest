@@ -7,8 +7,7 @@ import { view } from "./view.js";
  */
 async function gatherRunView() {
     await gatherFiles("#filelist");
-    const results = await Test.runAll();
-    view(results, "#results");
+    view(Test.getResultPromises(), "#results");
 }
 
 /// GO
