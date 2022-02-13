@@ -40,7 +40,7 @@ html```
 Asynchronous code can be tested, but some care must be taken, see example :
 
 js```
-itShould("eventually handle the correct value", async function later() {
+itShould("eventually handle the correct value", function later() {
     let value = "initial";
     setTimeout(function after1s() {
         value = "after 1s";
@@ -71,23 +71,24 @@ itShould("eventually handle the correct value", async function later() {
 });
 ```
 
-Or you can use the new `resolve` and `reject` options on `assert` functions to pass the promise's own `resolve` and `reject` :
+Or you can simplify by removing the `try..catch` as follows : use the new `resolve` and `reject` options on `assert` functions to pass the promise's own `resolve` and `reject` :
 
 js```
-itShould("eventually handle the correct value", async function later() {
+itShould("eventually handle the correct value", function later() {
     let value = "initial";
     setTimeout(function after1s() {
         value = "after 1s";
     }, 1000);
     /*
         If your tested functions use async behaviour like "setTimeout",
-         then you should wrap the "assert" parts in Promises.
+         then you should wrap the "assert" parts in Promises,
+         and pass it the resolve/reject.
     */
     return new Promise(function runLater(resolve, reject) {
         value = "when starting Promise executor";
         /// Starting long operation for 2s
         setTimeout(function after2s() {
-            /// here pass the resolve / reject
+            /// ==> here pass the resolve / reject
             assert.strictEqual(value, "after 1s", { resolve, reject });
         }, 2000);
         value = "when returning from Promise executor";

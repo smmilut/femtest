@@ -22,46 +22,53 @@ export const Test = (function build_Test() {
          * run all tests and return results
          * @returns {object} {
                 groups: Map([
-                    [groupName1, { description, index, isPass, error, returned }],
-                    [groupName2, result2],
+                    [groupName0, { description, index, groupName, isPass, error, returned }],
+                    [groupName1, result1],
                     ...]),
+                promises: [ Promise(result0), Promise(result1), ...],
                 summary: { totalLength, totalRun, countOk, countFail },
             }
          */
         runAll: async function Test_runAll() {
-            return tests.reduce(async function runTest(results, t, i) {
-                results = await results;
+            const results = tests.reduce(function runTest(results, t, i) {
                 if (!results.groups.has(t.groupName)) {
                     results.groups.set(t.groupName, []);
                 }
-                const result = {
-                    description: t.description,
-                    index: i,
-                };
-                try {
-                    if (isAsync(t.test)) {
-                        console.log("Waiting for async test...")
-                        let innerError;
-                        result.returned = await t.test().catch(e => { innerError = e; });
-                        if (innerError !== undefined) {
-                            throw innerError;
-                        }
-                        console.log("... completed async test");
-                    } else {
-                        result.returned = t.test();
+                const promise = (new Promise(
+                    function promiseRunTest(resolve, _reject) {
+                        resolve(t.test());
                     }
-                    result.isPass = true;
-                    results.summary.countOk++;
-                } catch (error) {
-                    result.error = error;
-                    result.isPass = false;
-                    results.summary.countFail++;
-                }
-                results.summary.totalRun++;
-                results.groups.get(t.groupName).push(result);
+                )).then(
+                    function handleTestPass(value) {
+                        results.summary.totalRun++;
+                        results.summary.countOk++;
+                        return {
+                            returned: value,
+                            isPass: true,
+                        };
+                    },
+                    function handleTestFail(error) {
+                        results.summary.totalRun++;
+                        results.summary.countFail++;
+                        return {
+                            error: error,
+                            isPass: false,
+                        };
+                    }
+                ).then(
+                    function finishResult(result) {
+                        return Object.assign({
+                            description: t.description,
+                            index: i,
+                            groupName: t.groupName,
+                        }, result);
+                    }
+                );
+                results.promises.push(promise);
                 return results;
             }, {
                 groups: new Map(),
+                promises: [],
                 summary: {
                     totalLength: tests.length,
                     totalRun: 0,
@@ -69,6 +76,18 @@ export const Test = (function build_Test() {
                     countFail: 0,
                 },
             });
+            /// Run all tests in parallel
+            await Promise.all(results.promises);
+            /// Aggregate groups
+            results.promises.forEach(function pushToGroup(promise) {
+                promise.then(
+                    function pushResult(result) {
+                        results.groups.get(result.groupName).push(result);
+                    }
+                )
+                
+            });
+            return results;
         },
     };
 })();

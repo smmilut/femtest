@@ -1,14 +1,15 @@
 import { groupIt, assert } from "../utils/femtest/test.js";
 const itShould = groupIt("async / later");
 
-itShould("eventually handle the correct value", async function later() {
+itShould("eventually handle the correct value", function later() {
     let value = "initial";
     setTimeout(function after1s() {
         value = "after 1s";
     }, 1000);
     /*
         If your tested functions use async behaviour like "setTimeout",
-         then you should wrap the "assert" parts in Promises.
+         then you should wrap the "assert" parts in Promises,
+         and pass it the resolve/reject.
     */
     return new Promise(function runLater(resolve, reject) {
         value = "when starting Promise executor";
@@ -20,7 +21,7 @@ itShould("eventually handle the correct value", async function later() {
     });
 });
 
-itShould("test 0.5s", async function later500ms() {
+itShould("test 0.5s", function later500ms() {
     let value = "initial";
     return new Promise(function runLater(resolve, reject) {
         setTimeout(function after500ms() {
@@ -30,7 +31,7 @@ itShould("test 0.5s", async function later500ms() {
     });
 });
 
-itShould("test 1s", async function later1s() {
+itShould("test 1s", function later1s() {
     let value = "initial";
     return new Promise(function runLater(resolve, reject) {
         setTimeout(function after1s() {
@@ -40,7 +41,7 @@ itShould("test 1s", async function later1s() {
     });
 });
 
-itShould("test 1.5s", async function later1500ms() {
+itShould("test 1.5s", function later1500ms() {
     let value = "initial";
     return new Promise(function runLater(resolve, reject) {
         setTimeout(function after1500ms() {
