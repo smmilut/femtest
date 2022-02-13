@@ -14,19 +14,8 @@ itShould("eventually handle the correct value", async function later() {
         value = "when starting Promise executor";
         /// Starting long operation for 2s
         setTimeout(function after2s() {
-            /// Testing behaviour after 2s
-            try {
-                /*
-                    All assert and all possible exceptions thrown from your tests
-                     should be wrapped in try ... catch, then be rejected.
-                */
-                assert.strictEqual(value, "after 1s");
-                resolve();
-            } catch (e) {
-                reject(e);
-            }
+            assert.strictEqual(value, "after 1s", { resolve, reject });
         }, 2000);
-
         value = "when returning from Promise executor";
     });
 });
@@ -35,14 +24,8 @@ itShould("test 0.5s", async function later500ms() {
     let value = "initial";
     return new Promise(function runLater(resolve, reject) {
         setTimeout(function after500ms() {
-            try {
-                assert.strictEqual(value, "when returning from Promise executor");
-                resolve();
-            } catch (e) {
-                reject(e);
-            }
+            assert.strictEqual(value, "when returning from Promise executor", { resolve, reject });
         }, 500);
-
         value = "when returning from Promise executor";
     });
 });
@@ -50,15 +33,9 @@ itShould("test 0.5s", async function later500ms() {
 itShould("test 1s", async function later1s() {
     let value = "initial";
     return new Promise(function runLater(resolve, reject) {
-        setTimeout(function after1ms() {
-            try {
-                assert.strictEqual(value, "when returning from Promise executor");
-                resolve();
-            } catch (e) {
-                reject(e);
-            }
+        setTimeout(function after1s() {
+            assert.strictEqual(value, "when returning from Promise executor", { resolve, reject });
         }, 1000);
-
         value = "when returning from Promise executor";
     });
 });
@@ -67,14 +44,8 @@ itShould("test 1.5s", async function later1500ms() {
     let value = "initial";
     return new Promise(function runLater(resolve, reject) {
         setTimeout(function after1500ms() {
-            try {
-                assert.strictEqual(value, "when returning from Promise executor");
-                resolve();
-            } catch (e) {
-                reject(e);
-            }
+            assert.strictEqual(value, "when returning from Promise executor", { resolve, reject });
         }, 1500);
-
         value = "when returning from Promise executor";
     });
 });
