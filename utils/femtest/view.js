@@ -4,7 +4,7 @@
  * @param {string} selector DOM selector of parent element
  * @param {object} doc the `document`
  */
-export function view(results, selector, doc = document) {
+ export function view(results, selector, doc = document) {
     const elParent = doc.querySelector(selector);
     /// Append global test summary
     const elSummary = updateGlobalSummary(results.summary, doc);
@@ -149,7 +149,7 @@ function updateGlobalSummary(summary, doc = document) {
     if (summary.totalRun < summary.totalLength) {
         elPassFailIcon.textContent = "\u231B";
         elPassFailIcon.classList.add("progressIcon");
-        elPassFailText.textContent = `IN PROGRESS ${100 * summary.totalRun / summary.totalLength}%`;
+        elPassFailText.textContent = `IN PROGRESS ${(100 * summary.totalRun / summary.totalLength).toFixed(1)}%`;
         elPassFailText.classList.add("progress");
     } else if (summary.countFail === 0) {
         elPassFailIcon.textContent = "\u2714";
@@ -170,4 +170,22 @@ function updateGlobalSummary(summary, doc = document) {
     elSummaryDetails.textContent = `${summary.totalRun}/${summary.totalLength} ran = ${summary.countFail} FAIL + ${summary.countOk} OK`;
     elSummary.appendChild(elSummaryDetails);
     return elSummary;
+}
+
+/**
+ * View the list of tested files
+ * @param {Array} filenames array of file paths
+ * @param {string} selector DOM selector of parent element
+ * @param {object} doc the `document`
+ */
+export function viewFileList(filenames, selector, doc = document) {
+    const elParent = doc.querySelector(selector);
+    const listItems = filenames.map(function fileNameToLi(filename) {
+        const elLi = doc.createElement("li");
+        elLi.textContent = filename;
+        return elLi;
+    });
+    listItems.forEach(function appendToParent(elLi) {
+        elParent.appendChild(elLi);
+    });
 }

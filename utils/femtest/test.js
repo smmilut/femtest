@@ -1,5 +1,3 @@
-import { isAsync } from "./utils.js";
-
 export * from "./assert.js";
 
 export const Test = (function build_Test() {

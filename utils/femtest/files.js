@@ -1,12 +1,12 @@
+import { requestJson } from "./httpUtils.js";
+
 /**
- * @param {string} selector DOM selector
- * @param {object} doc object like `document`
+ * @param {string} configPath path to config file
  * @returns {Array} filenames
  */
-function getFilenames(selector, doc = document) {
-    return Array.from(doc.querySelector(selector).children).map(function filenameFromLi(elLi) {
-        return elLi.textContent;
-    });
+async function getFilenames(configPath) {
+    const config = await requestJson({ url: configPath });
+    return config.testFiles;
 }
 
 /**
@@ -22,9 +22,11 @@ async function loadModulesFromFilenames(filenames) {
 }
 
 /**
- * Load modules whose filenames are listed at `selector`
- * @param {string} selector DOM selector
+ * Load modules whose filenames are listed at `configPath`
+ * @param {string} configPath path to config file
  */
-export async function gatherFiles(selector) {
-    return await loadModulesFromFilenames(getFilenames(selector));
+export async function gatherFiles(configPath) {
+    const filenames = await getFilenames(configPath);
+    await loadModulesFromFilenames(filenames);
+    return filenames;
 }

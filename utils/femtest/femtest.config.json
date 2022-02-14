@@ -1,0 +1,9 @@
+{
+    "description": "example config",
+    "testFiles": [
+        "/tests/exampleEquals.js",
+        "/tests/exampleThrows.js",
+        "../../tests/exampleImport.js",
+        "/tests/exampleLater.js"
+    ]
+}

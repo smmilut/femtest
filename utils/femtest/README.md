@@ -28,14 +28,14 @@ The group name is optionnal. Group names that only differ by special characters 
 
 ### How to choose which tests are run
 
-Reference your test files' paths in `index.html` as a new `<li> tag inside tag `<ul id="filelist">`. You can use absolute paths or relative to the `index.html`.
+Reference your test files' paths in `femtest.config.json` as a new list item inside `testFiles`. You can use absolute paths or relative to the `index.html`.
 
-html```
-<ul id="filelist">
-    <li>/tests/femtestEquals.js</li>
-    <li>/tests/femtestThrows.js</li>
-    <li>../../tests/femtestImport.js</li>
-</ul>
+json```
+"testFiles": [
+        "/tests/exampleEquals.js",
+        "../../tests/exampleImport.js",
+        "/tests/exampleLater.js"
+    ]
 ```
 
 ### Note on async tests
