@@ -4,13 +4,18 @@
 
 femto-test ultra simple testing framework
 
-## Status
+## How to add to your project
 
-Usable. Handles asynchronous tests, and runs everything in parallel.
+1. Copy the [`utils/femtest`](./) folder somewhere under the root of your application.
+2. Write some tests (see below).
+3. Update the [`femtest/femtest.config.json`](femtest.config.json) to reference your tests (see below).
+4. Navigate to the [`femtest/index.html`](index.html) to run tests and see results in the page.
 
-## How to write
+## How to write tests
 
-Import "test.js" and use `Test.itShould()` to add a test :
+Import "test.js" and use `Test.itShould("your description", function yourTest() {}, "optional group name")` to add a test.
+
+Tests succeed unless an exception is thrown. The `assert` utilities help to make assertions and throw `AssertError` on failure.
 
 js```
 import { Test, assert } from "../utils/femtest/test.js";
@@ -21,10 +26,22 @@ Test.itShould("do something / description here", function testSomething() {
     /// assert at the end
     assert.strictEqual(expected, result);
 },
-"optionnal group name");
+"optionnal test group name");
 ```
 
 The group name is optionnal. Group names that only differ by special characters are considered the same (e.g. `my super tests !` and `my--super / tests ++` will be aggregated together).
+
+To group tests, you can alternately import `groupIt` :
+
+js```
+import { groupIt, assert } from "../utils/femtest/test.js";
+const itShould = groupIt("example : equals")
+
+itShould("return 5 as sum(2, 3)", function testFive() {
+    const val1 = 2, val2 = 3, expected = 5, result = val1 + val2;
+    assert.strictEqual(result, expected);
+});
+```
 
 ### How to choose which tests are run
 
@@ -102,3 +119,13 @@ itShould("eventually handle the correct value", function later() {
 ## How to run
 
 Run the web server in the root directory and browse to [the index.html](http://0.0.0.0:8000/utils/femtest/index.html)
+
+### Examples
+
+You can find examples in this repository's `test/` folder. They can be run live in this Github Page at the following location : 
+
+## License
+
+The code in this project is licensed under the MIT license as described in the `LICENSE` file.
+
+The assets in this project are licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/) attributed to Pil Smmilut.
