@@ -81,23 +81,25 @@ function resultToHtml(result, doc = document) {
     const elResultPassFailIcon = doc.createElement("span");
     elResultPassFailIcon.classList.add("passfailIcon");
     const elResultPassFail = doc.createElement("span");
-    elResultPassFail.classList.add("passfail");
+    elResultPassFail.classList.add("passfailText");
     const elResultDescription = doc.createElement("span");
     const elResultInfo = doc.createElement("p");
     if (result.isPass) {
+        elResult.classList.add("pass");
         elResultPassFailIcon.textContent = "\u2714";
         elResultPassFailIcon.classList.add("passIcon");
         elResultPassFail.textContent = "OK";
-        elResultPassFail.classList.add("pass");
+        elResultPassFail.classList.add("passText");
         elResultDescription.textContent = `it should "${result.description}".`;
         if (result.returned !== undefined) {
             elResultInfo.textContent = `Returned : ${result.returned}`;
         }
     } else {
+        elResult.classList.add("fail");
         elResultPassFailIcon.textContent = "\u2718";
         elResultPassFailIcon.classList.add("failIcon");
         elResultPassFail.textContent = "FAIL";
-        elResultPassFail.classList.add("fail");
+        elResultPassFail.classList.add("failText");
         elResultDescription.textContent = `it doesn't "${result.description}"`;
         if (result.error !== undefined) {
             const elError = doc.createElement("p");
@@ -127,7 +129,21 @@ function resultToHtml(result, doc = document) {
  * @returns {Node} HTML element for the summary of test results
  */
 function updateGlobalSummary(summary, doc = document) {
-    const idSummary = "femtestGlobalSummary";
+    const elSummary = createOrGetSummary("femtestGlobalSummary", doc);
+    clearSummary(elSummary);
+    /// Append title
+    const elSummaryTitle = createSummaryTitle(doc);
+    elSummary.appendChild(elSummaryTitle);
+    /// Append summary result
+    const elPassFailProgress = createSummaryPassFailProgress(summary, doc);
+    elSummary.appendChild(elPassFailProgress);
+    /// Append summary details line
+    const elSummaryDetails = createSummaryDetailsLine(summary, doc);
+    elSummary.appendChild(elSummaryDetails);
+    return elSummary;
+}
+
+function createOrGetSummary(idSummary, doc = document) {
     let elSummary = doc.getElementById(idSummary);
     if (!elSummary) {
         /// Create summary section
@@ -135,41 +151,90 @@ function updateGlobalSummary(summary, doc = document) {
         elSummary.setAttribute("id", idSummary);
         elSummary.classList.add("box");
     }
+    return elSummary;
+}
+
+function clearSummary(elSummary) {
     elSummary.innerHTML = "";
-    /// Append title
+    return elSummary;
+}
+
+function createSummaryTitle(doc = document) {
     const elSummaryTitle = doc.createElement("h3");
     elSummaryTitle.textContent = "Summary :";
-    elSummary.appendChild(elSummaryTitle);
-    /// Append summary result
+    return elSummaryTitle;
+}
+
+function createSummaryPassFailProgress(summary, doc = document) {
     const elPassOrFail = doc.createElement("p");
     const elPassFailIcon = doc.createElement("span");
     elPassFailIcon.classList.add("passfailIcon");
     const elPassFailText = doc.createElement("span");
-    elPassFailText.classList.add("passfail");
+    elPassFailText.classList.add("passfailText");
     if (summary.totalRun < summary.totalLength) {
+        /// progress
         elPassFailIcon.textContent = "\u231B";
         elPassFailIcon.classList.add("progressIcon");
-        elPassFailText.textContent = `IN PROGRESS ${(100 * summary.totalRun / summary.totalLength).toFixed(1)}%`;
+        const progressPct = (100 * summary.totalRun / summary.totalLength).toFixed(1);
+        elPassFailText.textContent = `IN PROGRESS ${progressPct}%`;
         elPassFailText.classList.add("progress");
     } else if (summary.countFail === 0) {
+        /// pass
         elPassFailIcon.textContent = "\u2714";
         elPassFailIcon.classList.add("passIcon");
         elPassFailText.textContent = "SUCCESS";
-        elPassFailText.classList.add("pass");
+        elPassFailText.classList.add("passText");
     } else {
+        /// fail
         elPassFailIcon.textContent = "\u2718";
         elPassFailIcon.classList.add("failIcon");
         elPassFailText.textContent = "FAILED";
-        elPassFailText.classList.add("fail");
+        elPassFailText.classList.add("failText");
     }
     elPassOrFail.appendChild(elPassFailIcon);
     elPassOrFail.appendChild(elPassFailText);
-    elSummary.appendChild(elPassOrFail);
-    /// Append summary details line
+    return elPassOrFail;
+}
+
+function createSummaryDetailsLine(summary, doc = document) {
     const elSummaryDetails = doc.createElement("p");
-    elSummaryDetails.textContent = `${summary.totalRun}/${summary.totalLength} ran = ${summary.countFail} FAIL + ${summary.countOk} OK`;
-    elSummary.appendChild(elSummaryDetails);
-    return elSummary;
+    const elProgressSpan = doc.createElement("span");
+    const elFailSpan = doc.createElement("span");
+    const elPassSpan = doc.createElement("span");
+    elProgressSpan.textContent = `${summary.totalRun}/${summary.totalLength} ran = `;
+    const elFirstFail = updateFirstFailId("firstFail", doc);
+    const failText = `${summary.countFail} FAIL`;
+    if (elFirstFail) {
+        const elAnchor = doc.createElement("a");
+        elAnchor.setAttribute("href", "#firstFail");
+        elAnchor.textContent = failText;
+        elFailSpan.appendChild(elAnchor);
+    } else {
+        elFailSpan.textContent = failText;
+    }
+    elPassSpan.textContent = ` + ${summary.countOk} OK`;
+    elSummaryDetails.appendChild(elProgressSpan);
+    elSummaryDetails.appendChild(elFailSpan);
+    elSummaryDetails.appendChild(elPassSpan);
+    return elSummaryDetails;
+}
+
+/**
+ * Update which test has the "firstFail" ID
+ * @param {string} id "firstFail"
+ * @param {object} doc the `document`
+ * @returns {Node} HTML element for the first failed test, if it exists (or null)
+ */
+function updateFirstFailId(id, doc = document) {
+    const elOldFirstFail = doc.querySelector(`#${id}`);
+    const elNewFirstFail = doc.querySelector(".fail");
+    if (elOldFirstFail) {
+        elOldFirstFail.removeAttribute("id");
+    }
+    if (elNewFirstFail) {
+        elNewFirstFail.id = id;
+    }
+    return elNewFirstFail;
 }
 
 /**
