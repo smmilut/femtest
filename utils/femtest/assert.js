@@ -2,7 +2,7 @@
  * Simplified assert
  *  inspired by Node's own `assert` as documented [here](https://nodejs.org/api/assert.html)
  */
- export const assert = {
+export const assert = {
     strictEqual: function assert_strictEqual(value1, value2,
         {
             resolve = function resolveNothing() { return true; },
@@ -14,6 +14,28 @@
         } else {
             return reject(new AssertError(`${value1} !== ${value2}`));
         }
+    },
+    almostEqual: function assert_almostEqual(value1, value2,
+        {
+            error = 0.001,
+            resolve = function resolveNothing() { return true; },
+            reject = function rejectThrow(error) { throw error; },
+        } = {}
+    ) {
+        const distance = Math.abs(value1 - value2);
+        if (distance <= error) {
+            return resolve();
+        } else {
+            return reject(new AssertError(`${value1} !== ${value2}`));
+        }
+    },
+    isTrue: function assert_isTrue(value,
+        {
+            resolve = function resolveNothing() { return true; },
+            reject = function rejectThrow(error) { throw error; },
+        } = {}
+    ) {
+        return assert.strictEqual(value, true, { resolve, reject });
     },
     throws: function assert_throws(fn, msgRegex,
         {
@@ -106,7 +128,7 @@
                 if (Object.hasOwnProperty.call(object2, key1)) {
                     const value2 = object2[key1];
                     if (value1 !== value2) {
-                        return reject(new AssertError(`object1.${key1} === ${value1} !== ${value2} === object1.${key1}`));
+                        return reject(new AssertError(`object1.${key1} === ${value1} !== ${value2} === object2.${key1}`));
                     }
                 } else {
                     return reject(new AssertError(`Object ${json2} is missing the "${key1}" property.`));

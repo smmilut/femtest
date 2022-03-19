@@ -4,6 +4,10 @@
         "../../tests/exampleEquals.js",
         "../../tests/exampleThrows.js",
         "../../tests/exampleImport.js",
+        "../../tests/jsThings.js",
         "../../tests/exampleLater.js"
+    ],
+    "excluded": [
+        "../../tests/jsWorkerTest.js"
     ]
 }
