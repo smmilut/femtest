@@ -4,7 +4,7 @@
  * @param {string} selector DOM selector of parent element
  * @param {object} doc the `document`
  */
- export function view(results, selector, doc = document) {
+export function view(results, selector, doc = document) {
     const elParent = doc.querySelector(selector);
     /// Append global test summary
     const elSummary = updateGlobalSummary(results.summary, doc);
@@ -166,6 +166,7 @@ function createSummaryTitle(doc = document) {
 }
 
 function createSummaryPassFailProgress(summary, doc = document) {
+    const elContainer = doc.createElement("div");
     const elPassOrFail = doc.createElement("p");
     const elPassFailIcon = doc.createElement("span");
     elPassFailIcon.classList.add("passfailIcon");
@@ -178,6 +179,10 @@ function createSummaryPassFailProgress(summary, doc = document) {
         const progressPct = (100 * summary.totalRun / summary.totalLength).toFixed(1);
         elPassFailText.textContent = `IN PROGRESS ${progressPct}%`;
         elPassFailText.classList.add("progress");
+        const elProgressBar = doc.createElement("progress");
+        elProgressBar.max = 100;
+        elProgressBar.value = progressPct;
+        elContainer.appendChild(elProgressBar);
     } else if (summary.countFail === 0) {
         /// pass
         elPassFailIcon.textContent = "\u2714";
@@ -193,7 +198,8 @@ function createSummaryPassFailProgress(summary, doc = document) {
     }
     elPassOrFail.appendChild(elPassFailIcon);
     elPassOrFail.appendChild(elPassFailText);
-    return elPassOrFail;
+    elContainer.appendChild(elPassOrFail);
+    return elContainer;
 }
 
 function createSummaryDetailsLine(summary, doc = document) {

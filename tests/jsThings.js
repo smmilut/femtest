@@ -1,7 +1,7 @@
 import { groupIt, assert } from "../utils/femtest/test.js";
 const itShould = groupIt("JS things")
 
-itShould("Object.assign replaces target", function objectAssign() {
+itShould("replace target when using Object.assign", function objectAssign() {
     const o1 = {
         a: "a1",
         b: "b1",
@@ -20,7 +20,7 @@ itShould("Object.assign replaces target", function objectAssign() {
     assert.objectsShallowStrictEqual(o1, expected);
 });
 
-itShould("running Background API completes correctly", function background() {
+itShould("complete correctly when running Background API", function background() {
     /* --- noise for predictable rand --- */
     const MAX_INT32 = ~(1 << 31);
     function squirrelNoise5(index, seed = 0) {
@@ -112,7 +112,7 @@ itShould("running Background API completes correctly", function background() {
         initialWork: [],
         isWorkCompleted: isCompleted,
     })(workSize).then(function done(result) {
-        console.log("done with", result);
+        // console.log("done with", result);
         assert.strictEqual(result.workRemaining, 0);
         assert.strictEqual(result.workDone.length, workSize);
         assert.almostEqual(result.workDone[0], 0.3470445025465658, { error: 0.0000001 });
