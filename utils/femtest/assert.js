@@ -105,32 +105,108 @@ export const assert = {
         {
             resolve = function resolveNothing() { return true; },
             reject = function rejectThrow(error) { throw error; },
+            equality = function strictEquality(a, b) { return a === b; },
         } = {}
     ) {
-        assert._rightObjectHasAllLeftPropertiesStrictEqual(object1, object2, { resolve, reject });
-        assert._rightObjectHasAllLeftPropertiesStrictEqual(object2, object1, { resolve, reject });
+        assert._rightObjectHasAllLeftPropertiesStrictEqual(object1, object2, { resolve, reject, equality, });
+        assert._rightObjectHasAllLeftPropertiesStrictEqual(object2, object1, { resolve, reject, equality, });
         return resolve();
     },
     /**
-     * (internal) does `object2` contain all the own properties of `object1` and are they all strictly equal ?
+     * (internal) does `object2` contain all the own properties of `object1` and are they all equal ?
      */
     _rightObjectHasAllLeftPropertiesStrictEqual: function assert_rightObjectHasAllLeftPropertiesStrictEqual(
         object1, object2,
         {
             resolve = function resolveNothing() { return true; },
             reject = function rejectThrow(error) { throw error; },
+            equality = function strictEquality(a, b) { return a === b; },
         } = {}
     ) {
-        const json2 = JSON.stringify(object2);
         for (const key1 in object1) {
             if (Object.hasOwnProperty.call(object1, key1)) {
                 const value1 = object1[key1];
                 if (Object.hasOwnProperty.call(object2, key1)) {
                     const value2 = object2[key1];
-                    if (value1 !== value2) {
-                        return reject(new AssertError(`object1.${key1} === ${value1} !== ${value2} === object2.${key1}`));
+                    if (!equality(value1, value2)) {
+                        const value1Str = value1.toString ? value1.toString() : "{value1 with no toString}";
+                        const value2Str = value2.toString ? value2.toString() : "{value2 with no toString}";
+                        return reject(new AssertError(`object1.${key1} === ${value1Str} !== ${value2Str} === object2.${key1}`));
                     }
                 } else {
+                    const json2 = JSON.stringify(object2);
+                    return reject(new AssertError(`Object ${json2} is missing the "${key1}" property.`));
+                }
+            }
+        }
+        return true;
+    },
+    /**
+     * Compare two objects :
+     *  - does `object2` contain all the own properties of `object1` and are they all deeply equal ? 
+     *  - does `object1` contain all the own properties of `object2` and are they all deeply equal ? 
+     * @param {*} object1 
+     * @param {*} object2 
+     * @param {object} options {
+     *   resolve,  called on success
+     *   reject,  called on failure
+     *   equality,  called to test primitive equality (defaults to ===)
+     *   depth,  maximum recursion depth
+     * }
+     * @returns 
+     */
+    objectsDeepEqual: function assert_objectsDeeperEqual(object1, object2,
+        {
+            resolve = function resolveNothing() { return true; },
+            reject = function rejectThrow(error) { throw error; },
+            equality = function strictEquality(a, b) { return a === b; },
+            depth = 20,
+        } = {}
+    ) {
+        if (depth <= 0) {
+            reject(new AssertError("maximum recursion depth was reached when attempting to compare objects"));
+        }
+        assert._rightObjectHasAllLeftPropertiesDeepEqual(object1, object2, { reject, equality, depth });
+        assert._rightObjectHasAllLeftPropertiesDeepEqual(object2, object1, { reject, equality, depth });
+        return resolve();
+    },
+    /**
+     * (internal) does `object2` contain all the own properties of `object1` and are they all deeply equal ?
+     */
+    _rightObjectHasAllLeftPropertiesDeepEqual: function assert_rightObjectHasAllLeftPropertiesDeeperEqual(
+        object1, object2,
+        {
+            reject = function rejectThrow(error) { throw error; },
+            equality = function strictEquality(a, b) { return a === b; },
+            depth = 20,
+        } = {}
+    ) {
+        for (const key1 in object1) {
+            if (Object.hasOwnProperty.call(object1, key1)) {
+                const value1 = object1[key1];
+                if (Object.hasOwnProperty.call(object2, key1)) {
+                    const value2 = object2[key1];
+                    if (
+                        typeof value1 === "object" &&
+                        assert.objectsDeepEqual(value1, value2, {
+                            resolve: function resolveNothing() { return true; },
+                            reject, equality,
+                            depth: depth - 1
+                        })
+                    ) {
+                        /// are deeply equal objects
+                        continue;
+                    } else if (equality(value1, value2)) {
+                        /// are equal values
+                        continue;
+                    } else {
+                        /// are different
+                        const value1Str = value1.toString ? value1.toString() : "{value1 with no toString}";
+                        const value2Str = value2.toString ? value2.toString() : "{value2 with no toString}";
+                        return reject(new AssertError(`object1.${key1} === ${value1Str} !== ${value2Str} === object2.${key1}`));
+                    }
+                } else {
+                    const json2 = JSON.stringify(object2);
                     return reject(new AssertError(`Object ${json2} is missing the "${key1}" property.`));
                 }
             }
