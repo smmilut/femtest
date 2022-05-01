@@ -1,0 +1,9 @@
+{
+    "name": "femtest",
+    "version": "1.0.0",
+    "description": "small testing framework",
+    "private": true,
+    "author": "smmilut",
+    "license": "MIT",
+    "type": "module"
+}

@@ -1,11 +1,10 @@
-import { requestJson } from "./httpUtils.js";
-
 /**
  * @param {string} configPath path to config file
  * @returns {Array} filenames
  */
 async function getFilenames(configPath) {
-    const config = await requestJson({ url: configPath });
+    const response = await fetch(configPath);
+    const config = await response.json();
     return config.testFiles;
 }
 
