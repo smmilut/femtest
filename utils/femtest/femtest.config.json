@@ -5,6 +5,7 @@
         "../../tests/exampleThrows.js",
         "../../tests/exampleImport.js",
         "../../tests/jsThings.js",
+        "../../tests/jsThings_background.js",
         "../../tests/exampleLater.js"
     ],
     "excluded": [

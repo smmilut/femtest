@@ -20,186 +20,63 @@ itShould("replace target when using Object.assign", function objectAssign() {
     assert.objectsShallowStrictEqual(o1, expected);
 });
 
-itShould("complete correctly when running Background API", function background() {
-    /* --- noise for predictable rand --- */
-    const MAX_INT32 = ~(1 << 31);
-    function squirrelNoise5(index, seed = 0) {
-        const SQ5_BIT_NOISE1 = 0xd2a80a3f;  // 11010010101010000000101000111111
-        const SQ5_BIT_NOISE2 = 0xa884f197;  // 10101000100001001111000110010111
-        const SQ5_BIT_NOISE3 = 0x6C736F4B;  // 01101100011100110110111101001011
-        const SQ5_BIT_NOISE4 = 0xB79F3ABB;  // 10110111100111110011101010111011
-        const SQ5_BIT_NOISE5 = 0x1b56c4f5;  // 00011011010101101100010011110101
+itShould("JSON stringify prototype properties", function JSONstringifyParent() {
+    const myProto = {};
+    myProto.myProtoPropStr = "a proto prop";
+    myProto.myProtoPropNum = 456;
+    myProto.myProtoFunc = function myProtoFunc() { return "returned by a proto function"; };
+    const myObj = Object.create(myProto);
+    myObj.ownPropStr = "own obj prop";
+    myObj.ownPropNum = 123;
+    myObj.ownFunc = function ownFunc() { return "returned by own func"; };
+    const myJson = JSONstringifyEnumProps(myObj, function replacer(key, value) {
+        if (typeof value === "string") {
+            return `replacedString(${value})`;
+        }
+        return value;
+    }, 2);
+    assert.strictEqual(myJson,
+        `{
+  "ownPropStr": "replacedString(own obj prop)",
+  "ownPropNum": 123,
+  "myProtoPropStr": "replacedString(a proto prop)",
+  "myProtoPropNum": 456
+}`
+    );
 
-        let mangledBits = index;  // could explicitly convert here
-        mangledBits *= SQ5_BIT_NOISE1;
-        mangledBits += seed;
-        mangledBits ^= (mangledBits >> 9);
-        mangledBits += SQ5_BIT_NOISE2;
-        mangledBits ^= (mangledBits >> 11);
-        mangledBits *= SQ5_BIT_NOISE3;
-        mangledBits ^= (mangledBits >> 13);
-        mangledBits += SQ5_BIT_NOISE4;
-        mangledBits ^= (mangledBits >> 15);
-        mangledBits *= SQ5_BIT_NOISE5;
-        mangledBits ^= (mangledBits >> 17);
-        return mangledBits;
-    }
-    function get1dNoiseZeroToOne(index, seed = 0) {
-        return squirrelNoise5(index, seed) * 1.0 / MAX_INT32;
-    }
-    const rand = {
-        init(seed = 0, initIndex = 0) {
-            this.seed = seed;
-            this.initIndex = initIndex;
-            this.reset();
-        },
-        reset() {
-            this.index = this.initIndex;
-        },
-        next() {
-            return get1dNoiseZeroToOne(this.index++, this.seed);
-        },
-    };
-    rand.init();
-
-    /* --- init --- */
-    function fastInitArray(size) {
-        return Array(size).fill(0).map(() => rand.next());
-    }
-
-    /* --- the slow part --- */
-    function slowSample(xs) {
-        /**
-         * Slow when size = 10000 then 1.5s
-         */
-        return function sampleSize(size) {
-            function updatedArray(oldArray, newValue) {
-                return [...oldArray, newValue]
+    /**
+     * Get a flat object copy of all enumerable properties, including from the prototype chain
+     * @param {*} obj 
+     * @returns {Object} with all enumerable properties of `obj`, including from the prototype chain
+     */
+    function flatEnumProps(
+        obj,
+        replacer = function allowAll(key, value) {
+            return { replacedKey: key, replacedValue: value, };
+        }
+    ) {
+        const objCopy = {};
+        for (const key in obj) {
+            const value = obj[key];
+            const replaced = replacer(key, value);
+            if (replaced === undefined) {
+                ///ignore
+                continue;
             }
-            let array = [];
-            while (array.length < size) {
-                array = updatedArray(array, xs[Math.floor(rand.next() * xs.length)]);
-            }
-            return array;
-        };
+            const { replacedKey, replacedValue, } = replaced;
+            objCopy[replacedKey] = replacedValue;
+        }
+        return objCopy;
     }
-
-    /* --- chunk utilities --- */
-    function splitNumber(size) {
-        return function splitN(n) {
-            // console.log("splitting", Math.min(size, n), "leaving", Math.max(n - size, 0));
-            return {
-                nextWorkInput: Math.min(size, n),
-                workRemaining: Math.max(n - size, 0),
-            };
-        };
+    /**
+     * Stringify to JSON all enumerable properties of `obj`, including from the prototype chain
+     * @param {*} obj 
+     * @param {Function} replacer 
+     * @param {Number} space 
+     * @returns {String} JSON
+     */
+    function JSONstringifyEnumProps(obj, replacer, space) {
+        const flatObj = flatEnumProps(obj);
+        return JSON.stringify(flatObj, replacer, space);
     }
-    function aggregateResultChunks({ previousWorkDone, latestWork }) {
-        return [...previousWorkDone, ...latestWork];
-    }
-    function isCompleted({ latestWork, workDone, workRemaining }) {
-        // console.log("is completed", workRemaining === undefined || workRemaining <= 0, latestWork, workDone, workRemaining);
-        return workRemaining === undefined || workRemaining <= 0;
-    }
-
-    /* --- go --- */
-    const workSize = 100000;
-
-    return runBackground({
-        doWork: slowSample(fastInitArray(10000)),
-        splitWork: splitNumber(1000),
-        aggregateWork: aggregateResultChunks,
-        initialWork: [],
-        isWorkCompleted: isCompleted,
-    })(workSize).then(function done(result) {
-        // console.log("done with", result);
-        assert.strictEqual(result.workRemaining, 0);
-        assert.strictEqual(result.workDone.length, workSize);
-        assert.almostEqual(result.workDone[0], 0.3470445025465658, { error: 0.0000001 });
-
-    });
 });
-
-function runBackground({
-    doWork,
-    splitWork,
-    aggregateWork,
-    initialWork,
-    isWorkCompleted,
-    timeout,
-}) {
-    return function runBackgroundWithInput(workInput) {
-        return new Promise(function promiseBackgroundResult(resolve, reject) {
-            (function requestNewIdleWork({
-                workRemaining,
-                workDone,
-                accumulatedDuration,
-                startDate,
-            }) {
-                requestIdleCallback(function runIdleCallback(deadline) {
-                    if (deadline.timeRemaining() > 0 || deadline.didTimeout) {
-                        try {
-                            let newWorkRemaining = workRemaining;
-                            let newWorkDone = workDone;
-                            let newAccumulatedDuration = accumulatedDuration;
-                            while (deadline.timeRemaining() > 0 || deadline.didTimeout) {
-                                // console.log("continue work this time");
-                                // console.log(deadline.timeRemaining(), "ms left at beginning");
-                                const splitted = splitWork(workRemaining);
-                                const nextWorkInput = splitted.nextWorkInput;
-                                newWorkRemaining = splitted.workRemaining;
-                                const chunkStartDate = new Date();
-                                const latestWork = doWork(nextWorkInput);
-                                newAccumulatedDuration = accumulatedDuration + (new Date() - chunkStartDate);
-                                newWorkDone = aggregateWork({ previousWorkDone: workDone, latestWork });
-                                // console.log(workDone, latestWork, newWorkDone);
-                                if (isWorkCompleted({ latestWork, workDone: newWorkDone, workRemaining: newWorkRemaining })) {
-                                    resolve({
-                                        workDone: newWorkDone,
-                                        workRemaining: newWorkRemaining,
-                                        accumulatedDuration: newAccumulatedDuration,
-                                        fullDuration: (new Date()) - startDate,
-                                    });
-                                    return;
-                                }
-                                // console.log(deadline.timeRemaining(), "ms left at end");
-
-                                workRemaining = newWorkRemaining;
-                                workDone = newWorkDone;
-                                accumulatedDuration = newAccumulatedDuration;
-                            }
-                            // console.log("continue work next time");
-                            requestNewIdleWork({
-                                workRemaining: newWorkRemaining,
-                                workDone: newWorkDone,
-                                accumulatedDuration: newAccumulatedDuration,
-                                startDate,
-                            });
-                            return;
-                        } catch (e) {
-                            reject(e);
-                            return;
-                        }
-                    } else {
-                        console.log("no time remaining");
-                        requestNewIdleWork({
-                            workRemaining,
-                            workDone,
-                            accumulatedDuration,
-                            startDate,
-                        });
-                        return;
-                    }
-                },
-                    { timeout }
-                );
-            })({
-                workRemaining: workInput,
-                workDone: initialWork,
-                accumulatedDuration: 0,
-                startDate: new Date(),
-            });
-
-        });
-    };
-}
