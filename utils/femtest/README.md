@@ -9,7 +9,18 @@ femto-test ultra simple testing framework
 1. Copy the [`utils/femtest`](./) folder somewhere under the root of your application.
 2. Write some tests (see below).
 3. Update the [`femtest/femtest.config.json`](femtest.config.json) to reference your tests (see below).
-4. Navigate to the [`femtest/index.html`](index.html) to run tests and see results in the page.
+
+## How to run tests
+
+### Browser
+
+1. Run the web server in the root directory
+2. Navigate to the [`femtest/index.html`](utils/femtest/index.html) to run tests and see results in the page.
+
+### Node
+
+1. `cd` to the root
+2. run `node ./utils/femtest/index.js`
 
 ## How to write tests
 
@@ -115,10 +126,6 @@ itShould("eventually handle the correct value", function later() {
     });
 });
 ```
-
-## How to run
-
-Run the web server in the root directory and browse to [the index.html](http://0.0.0.0:8000/utils/femtest/index.html)
 
 ### Examples
 

@@ -1,12 +1,20 @@
+import { isBrowser, isNode } from "./envUtils.js";
+
 /**
+ * Get the list of test files to load.
+ * Select the appropriate method for running in browser or Node
  * @param {string} configPath path to config file
  * @returns {Array} filenames
  */
-async function getFilenames(configPath) {
-    const response = await fetch(configPath);
-    const config = await response.json();
-    return config.testFiles;
-}
+const { getFilenames } = await (async function envLoadFile() {
+    if (isBrowser()) {
+        return await import('./browserFiles.js');
+    } else if (isNode()) {
+        return await import('./nodeFiles.js');
+    } else {
+        throw new Error("Only running in a web browser and Node are currently implemented.");
+    }
+})();
 
 /**
  * Dynamically import modules from filenames, for side effects only
